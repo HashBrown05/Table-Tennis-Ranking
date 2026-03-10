@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Table Tennis Rankings</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+html, body {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  font-family: Arial;
+}
+
+body { text-align: center; }
+main { flex: 1; }
+
+table {
+  width:95%;
+  margin:auto;
+  border-collapse:collapse;
+  margin-top: 20px;
+}
+
+th, td { border:1px solid black; padding:10px; }
+th { background:#eee; }
+button { padding:6px 10px; margin:2px; }
+
+footer {
+  padding: 20px;
+  background: #f0f0f0;
+}
+
+.reset-button{
+  padding:10px 20px; 
+  font-size:16px; 
+  background:#f44336; 
+  color:white; 
+  border:none; 
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Table Tennis Rankings</h1>
+
+<main>
+  <table>
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Player</th>
+        <th>Points</th>
+        <th>Wins</th>
+        <th>Losses</th>
+        <th>Record</th>
+      </tr>
+    </thead>
+    <tbody id="leaderboard"></tbody>
+  </table>
+</main>
+
+<footer>
+  <button class="reset-button" onclick="resetScores()">Reset Scores</button>
+</footer>
+
+<script type="module">
+  // 1️⃣ Import Firebase
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+  // 2️⃣ Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDUjBGs1emV2ZKQteEEhi667DsnZqFxkYY",
+    authDomain: "table-tennis-1bd8b.firebaseapp.com",
+    projectId: "table-tennis-1bd8b",
+    storageBucket: "table-tennis-1bd8b.firebasestorage.app",
+    messagingSenderId: "943725313614",
+    appId: "1:943725313614:web:c30d8fea84dd1550308d1f",
+    measurementId: "G-3P2C8LW3M3"
+  };
+
+  // 3️⃣ Initialize Firebase & Firestore
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // 4️⃣ Players
+  let players = [
+    {name:"Haydence",points:0,wins:0,losses:0},
+    {name:"Henri",points:0,wins:0,losses:0},
+    {name:"Matthew",points:0,wins:0,losses:0},
+    {name:"Mikal",points:0,wins:0,losses:0},
+    {name:"Adam",points:0,wins:0,losses:0},
+    {name:"Oneek",points:0,wins:0,losses:0},
+    {name:"Benoit",points:0,wins:0,losses:0},
+    {name:"Alex",points:0,wins:0,losses:0}
+  ];
+
+  // 5️⃣ Save to Firestore
+  async function save() {
+    await setDoc(doc(db,"leaderboard","scores"), {players});
+  }
+
+  // 6️⃣ Load from Firestore
+  async function load() {
+    const snap = await getDoc(doc(db,"leaderboard","scores"));
+    if(snap.exists()){
+      players = snap.data().players;
+    }
+    update();
+  }
+
+  // 7️⃣ Add/Remove Win/Loss & Reset
+  window.addWin = function(i){ players[i].points += 100; players[i].wins++; update(); }
+  window.removeWin = function(i){ 
+    if(players[i].wins > 0){ 
+      players[i].wins--; 
+      players[i].points -= 100; 
+      if(players[i].points < 0) players[i].points = 0; 
+      update(); 
+    } 
+  }
+  window.addLoss = function(i){ players[i].losses++; update(); }
+  window.removeLoss = function(i){ if(players[i].losses > 0){ players[i].losses--; update(); } }
+  
+  window.resetScores = function() {
+    if(confirm("Reset all scores?")){
+      players.forEach(p=>{p.points=0;p.wins=0;p.losses=0});
+      update();
+    }
+  }
+
+  // 8️⃣ Update leaderboard with tie-aware ranking
+  function update(){
+    players.sort((a,b)=>b.points-a.points);
+    let html="", rank=1, prevPoints=null, skip=0;
+
+    players.forEach((p,i)=>{
+      if(prevPoints !== null){
+        if(p.points === prevPoints) skip++;
+        else { rank += skip; skip=1; }
+      } else skip=1;
+      prevPoints = p.points;
+
+      html += `<tr>
+        <td>${rank}</td>
+        <td style="color:blue">${p.name}</td>
+        <td>${p.points}</td>
+        <td>${p.wins}</td>
+        <td>${p.losses}</td>
+        <td>
+          <button onclick="addWin(${i})">+Win</button>
+          <button onclick="removeWin(${i})">-Win</button>
+          <button onclick="addLoss(${i})">+Loss</button>
+          <button onclick="removeLoss(${i})">-Loss</button>
+        </td>
+      </tr>`;
+    });
+
+    document.getElementById("leaderboard").innerHTML = html;
+    save();
+  }
+
+  // 9️⃣ Load on page start
+  load();
+</script>
+
+</body>
+</html>
