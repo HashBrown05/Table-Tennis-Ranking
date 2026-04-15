@@ -55,6 +55,8 @@ footer {
   <button onclick="loginAdmin()">Login as Admin</button>
   <span id="status">Not logged in</span>
 </div>
+  <button onclick="logoutAdmin()">Logout</button>
+  
 
 <main>
   <table>
@@ -125,6 +127,16 @@ onAuthStateChanged(auth, (user) => {
     document.getElementById("status").innerText = "Not logged in";
   }
 });
+  import { signOut } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+
+window.logoutAdmin = async function () {
+  try {
+    await signOut(auth);
+    alert("Logged out");
+  } catch (e) {
+    console.error(e);
+  }
+};
 
 // Players
 let players = [
