@@ -101,7 +101,9 @@ async function save() {
 
 async function load() {
   const snap = await getDoc(doc(db,"leaderboard","scores"));
-  if (snap.exists()) players = snap.data().players;
+  if (snap.exists() && snap.data().players?.length) {
+  players = snap.data().players;
+}
   update();
 }
 
