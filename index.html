@@ -101,9 +101,15 @@ async function save() {
 
 async function load() {
   const snap = await getDoc(doc(db,"leaderboard","scores"));
+
+  console.log("firebase data:", snap.data());
+
   if (snap.exists() && snap.data().players?.length) {
-  players = snap.data().players;
-}
+    players = snap.data().players;
+  }
+
+  console.log("players after load:", players);
+
   update();
 }
 
